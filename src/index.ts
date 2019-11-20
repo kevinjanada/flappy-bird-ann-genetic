@@ -1,23 +1,20 @@
 import * as Phaser from 'phaser'
-import * as rocketImg from './assets/rocket.png' // Importing image need to use *
+import Rocket from './objects/Rocket'
 
 function setup() {
-  console.log('hahaha')
   const screenWidth = window.innerWidth - 20;
   const screenHeight = window.innerHeight - 20;
   function preload () {
-    //this.load.setBaseURL('http://labs.phaser.io');
     const remoteURL = 'http://labs.phaser.io'
 
     this.load.image('sky', remoteURL + '/assets/skies/space3.png');
     this.load.image('red', remoteURL + '/assets/particles/red.png');
-    //this.load.image('logo', 'assets/sprites/phaser3-logo.png');
 
-    this.load.image('rocket', rocketImg)
+    this.load.image(Rocket.textureKey, Rocket.image)
   }
 
   function create () {
-    this.add.image(400, 300, 'sky');
+    this.add.image(screenWidth/2, screenHeight/2, 'sky');
 
     var particles = this.add.particles('red');
 
@@ -27,14 +24,15 @@ function setup() {
       blendMode: 'ADD'
     });
 
-    var logo = this.physics.add.image(400, 100, 'rocket');
-
-    logo.setVelocity(100, 200);
-    logo.setBounce(1, 1);
-    logo.setCollideWorldBounds(true);
-
-    emitter.startFollow(logo);
+    //const rocket = this.physics.add.sprite(400, 100, 'rocket');
+    const rocket = new Rocket(this, {x: 400, y: 100});
+    rocket.setVelocity(100, 200);
+    emitter.startFollow(rocket);
   }
+
+  function update () {
+  }
+
   var config = {
     type: Phaser.AUTO,
     width: screenWidth,
@@ -47,7 +45,8 @@ function setup() {
     },
     scene: {
       preload: preload,
-      create: create
+      create: create,
+      update: update,
     }
   };
   var game = new Phaser.Game(config);
