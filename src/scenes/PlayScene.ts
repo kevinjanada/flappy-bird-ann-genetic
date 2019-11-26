@@ -4,15 +4,12 @@ import * as asteroidImg from '../assets/asteroid.svg'
 import * as backgroundImg from '../assets/background.jpg'
 
 class PlayScene extends Phaser.Scene {
-  ASTEROIDS: Array<Phaser.GameObjects.Image> 
   BACKGROUND: Phaser.GameObjects.TileSprite
-  NUM_OF_ASTEROIDS: number
-  ROCKET: Rocket
-  ROCKET_MOVE: any // FIXME: Temporary
+  ASTEROIDS: Array<Phaser.GameObjects.Sprite> = []
+  ASTEROIDS_SPEED: number = 6
+  ROCKETS: Array<Rocket> = []
   constructor() {
     super('PlayScene')
-    this.ASTEROIDS = []
-    this.NUM_OF_ASTEROIDS = 6
   }
   preload () {
     this.load.image('background', backgroundImg);
@@ -21,13 +18,14 @@ class PlayScene extends Phaser.Scene {
   }
   create () {
     this.createBackground()
-    this.createRocket()
+    this.createRockets(5)
     this.createAsteroids(5)
+    this.handleCollision()
   }
   update () {
-    this.ASTEROIDS.forEach(asteroid => this.moveAsteroid(asteroid, this.NUM_OF_ASTEROIDS))
+    this.ASTEROIDS.forEach(asteroid => this.moveAsteroid(asteroid, this.ASTEROIDS_SPEED))
     this.moveBackground()
-    this.moveRocket()
+    this.moveRockets()
   }
   /**
    * Add sky background to scene
@@ -40,9 +38,13 @@ class PlayScene extends Phaser.Scene {
   /**
    * Create a rocket
    */
-  createRocket () {
-    this.ROCKET = new Rocket(this, {x: 300, y: 100}, 500);
-    this.ROCKET_MOVE = this.ROCKET.moveDown.bind(this.ROCKET)
+  createRockets (numOfRockets: number) {
+    const rocketSpeed = 500
+    for (let i = 0; i < numOfRockets; i++) {
+      let randomY = Phaser.Math.Between(0, window.innerHeight - 20)
+      const rocket = new Rocket(this, {x: 300, y: randomY}, rocketSpeed, `Rocket-${i}`)
+      this.ROCKETS.push(rocket)
+    }
   }
   /*
    * Create Astoroids
@@ -50,7 +52,7 @@ class PlayScene extends Phaser.Scene {
    */
   createAsteroids (numOfAsteroids: number) {
     for (let i = 0; i < numOfAsteroids; i++) {
-      const asteroid = this.add.image(
+      const asteroid = this.physics.add.sprite(
         Phaser.Math.Between(window.innerWidth + 50, window.innerWidth + 1500),
         Phaser.Math.Between(0, window.innerHeight),
         'asteroid'
@@ -58,18 +60,17 @@ class PlayScene extends Phaser.Scene {
       this.ASTEROIDS.push(asteroid)
     }
   }
+  handleCollision () {
+    function onCollision (rocket: Phaser.GameObjects.Sprite, asteroid: Phaser.GameObjects.Sprite) {
+      rocket.destroy()
+    }
+    this.physics.add.collider(this.ROCKETS.map(r => r.gameObj), this.ASTEROIDS, onCollision)
+  }
   moveBackground () {
     this.BACKGROUND.tilePositionX += 0.5
   }
-  moveRocket () {
-    this.ROCKET.detectAsteroids(this.ASTEROIDS)
-    if (this.ROCKET.handle.y < 100) {
-      this.ROCKET_MOVE = this.ROCKET.moveDown.bind(this.ROCKET)
-    } 
-    if (this.ROCKET.handle.y > window.innerHeight - 100) {
-      this.ROCKET_MOVE = this.ROCKET.moveUp.bind(this.ROCKET)
-    } 
-    this.ROCKET_MOVE()
+  moveRockets () {
+    this.ROCKETS.forEach(r => r.detectAsteroids(this.ASTEROIDS))
   }
   /* 
    * Moves asteroid from right to left with random y position
