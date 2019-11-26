@@ -1,0 +1,3 @@
+- Make Rocket Movable with input
+- Make Rocket Collide with asteroids
+- Give Rocket a Score State that increase while rocket still alive
