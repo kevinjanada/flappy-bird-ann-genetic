@@ -1,6 +1,61 @@
 import * as Phaser from 'phaser'
 import * as rocketImg from '../assets/rocket.png' // Importing image need to use *
 import * as _ from 'lodash'
+import * as tf from '@tensorflow/tfjs'
+
+const ASTEROIDS_NUM = 5
+const INPUT_NUM = (1 + (ASTEROIDS_NUM * 2)) // rocket's y and each asteroid's x,y
+const HIDDEN_NUM = 4
+const OUTPUT_NUM = 2
+
+
+type Weights = {
+  hiddenWeights: tf.Tensor2D,
+  outputWeights: tf.Tensor2D
+}
+type Biases = {
+  hiddenBiases: tf.Tensor,
+  outputBiases: tf.Tensor
+}
+type BrainInput = {
+  y: number,
+  asteroidsPositions: Array<{x: number, y: number}>
+}
+class Brain {
+  inputs: tf.Tensor
+  hidden: tf.Tensor
+  hiddenWeights: tf.Tensor2D 
+  outputWeights: tf.Tensor2D
+  hiddenBiases: tf.Tensor
+  outputBiases: tf.Tensor
+  constructor(weights?: Weights, biases?: Biases) {
+    if (weights) {
+      this.hiddenWeights = weights.hiddenWeights;
+      this.outputWeights = weights.outputWeights;
+    }
+    if (biases) {
+      this.hiddenBiases = biases.hiddenBiases;
+      this.outputBiases = biases.outputBiases;
+    }
+    if (!weights && !biases) {
+      this.hiddenWeights = tf.randomUniform([INPUT_NUM, HIDDEN_NUM])
+      this.outputWeights = tf.randomUniform([HIDDEN_NUM, OUTPUT_NUM])
+      this.hiddenBiases = tf.randomUniform([HIDDEN_NUM])
+      this.outputBiases = tf.randomUniform([OUTPUT_NUM])
+    }
+  }
+  compute(brainInput: BrainInput) {
+    const input = [brainInput.y]
+    brainInput.asteroidsPositions.forEach(pos => {
+      input.push(pos.x)
+      input.push(pos.y)
+    })
+    const tensorInput = tf.tensor1d(input)
+    
+    // TODO: how to multiply tensors????
+    let hidden = tf.add(tf.matMul(this.hiddenWeights, tensorInput), this.hiddenBiases)
+  }
+}
 
 type coordinates = { x: number, y: number }
 type brainOutput = [number, number]
