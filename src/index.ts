@@ -1,9 +1,15 @@
 import * as Phaser from 'phaser'
+import * as tf from '@tensorflow/tfjs'
 import PlayScene from './scenes/PlayScene'
+
 
 let game
 
 function main() {
+  // Tensorflow setup
+  tf.setBackend('cpu')
+
+  // Game Setup
   const screenWidth = window.innerWidth - 20;
   const screenHeight = window.innerHeight - 20;
   var config = {

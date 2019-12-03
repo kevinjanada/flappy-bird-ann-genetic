@@ -1,61 +1,17 @@
 import * as Phaser from 'phaser'
 import * as rocketImg from '../assets/rocket.png' // Importing image need to use *
 import * as _ from 'lodash'
-import * as tf from '@tensorflow/tfjs'
+import Brain from './Brain'
+import {NUM_OF_ASTEROIDS} from '../config'
 
-const ASTEROIDS_NUM = 5
-const INPUT_NUM = (1 + (ASTEROIDS_NUM * 2)) // rocket's y and each asteroid's x,y
-const HIDDEN_NUM = 4
-const OUTPUT_NUM = 2
-
-
-type Weights = {
-  hiddenWeights: tf.Tensor2D,
-  outputWeights: tf.Tensor2D
-}
-type Biases = {
-  hiddenBiases: tf.Tensor,
-  outputBiases: tf.Tensor
-}
-type BrainInput = {
-  y: number,
-  asteroidsPositions: Array<{x: number, y: number}>
-}
-class Brain {
-  inputs: tf.Tensor
-  hidden: tf.Tensor
-  hiddenWeights: tf.Tensor2D 
-  outputWeights: tf.Tensor2D
-  hiddenBiases: tf.Tensor
-  outputBiases: tf.Tensor
-  constructor(weights?: Weights, biases?: Biases) {
-    if (weights) {
-      this.hiddenWeights = weights.hiddenWeights;
-      this.outputWeights = weights.outputWeights;
-    }
-    if (biases) {
-      this.hiddenBiases = biases.hiddenBiases;
-      this.outputBiases = biases.outputBiases;
-    }
-    if (!weights && !biases) {
-      this.hiddenWeights = tf.randomUniform([INPUT_NUM, HIDDEN_NUM])
-      this.outputWeights = tf.randomUniform([HIDDEN_NUM, OUTPUT_NUM])
-      this.hiddenBiases = tf.randomUniform([HIDDEN_NUM])
-      this.outputBiases = tf.randomUniform([OUTPUT_NUM])
-    }
-  }
-  compute(brainInput: BrainInput) {
-    const input = [brainInput.y]
-    brainInput.asteroidsPositions.forEach(pos => {
-      input.push(pos.x)
-      input.push(pos.y)
-    })
-    const tensorInput = tf.tensor1d(input)
-    
-    // TODO: how to multiply tensors????
-    let hidden = tf.add(tf.matMul(this.hiddenWeights, tensorInput), this.hiddenBiases)
-  }
-}
+/**
+* @inputNum
+* - rocket's y location (1 node)
+* - distance of asteroids (number of asteroids * 2 nodes)
+*/
+const inputNum = 1 + (NUM_OF_ASTEROIDS * 2)
+const hiddenNum = 20
+const outputNum = 2
 
 type coordinates = { x: number, y: number }
 type brainOutput = [number, number]
@@ -87,6 +43,7 @@ class Rocket {
     this.gameObj.setBounce(0, 1);
     this.gameObj.setCollideWorldBounds(true);
     this.speed = speed;
+    this.brain = new Brain(inputNum, hiddenNum, outputNum)
     if (id) this.id = id
   }
   calculateDistance(pos1: coordinates, pos2: coordinates): number {
@@ -96,10 +53,14 @@ class Rocket {
     return distance
   }
   detectAsteroids(asteroids: Array<Phaser.GameObjects.Image>) {
+    const brainInputs = []
     const currPos = { x: this.gameObj.x, y: this.gameObj.y }
+    brainInputs.push(currPos.y)
     asteroids.forEach(asteroid => {
-      const asteroidPos = { x: asteroid.x, y: asteroid.y }
+      brainInputs.push(asteroid.x)
+      brainInputs.push(asteroid.y)
     })
+    this.brain.predict(brainInputs)
   }
   makeDecision (brainOutput: brainOutput) {
     const up = [1,0]

@@ -1,7 +1,8 @@
 import * as Phaser from 'phaser'
-import Rocket from '../objects/Rocket'
+import Rocket from '../Rocket'
 import * as asteroidImg from '../assets/asteroid.svg'
 import * as backgroundImg from '../assets/background.jpg'
+import {NUM_OF_ROCKETS, NUM_OF_ASTEROIDS} from '../config'
 
 class PlayScene extends Phaser.Scene {
   BACKGROUND: Phaser.GameObjects.TileSprite
@@ -17,14 +18,16 @@ class PlayScene extends Phaser.Scene {
     this.load.image('asteroid', asteroidImg)
   }
   create () {
-    this.createBackground()
-    this.createRockets(5)
-    this.createAsteroids(5)
+    // FIXME: Background bikin yang low res. krn performance nya slow
+    //this.createBackground()
+    this.createRockets(NUM_OF_ROCKETS)
+    this.createAsteroids(NUM_OF_ASTEROIDS)
     this.handleCollision()
   }
   update () {
     this.ASTEROIDS.forEach(asteroid => this.moveAsteroid(asteroid, this.ASTEROIDS_SPEED))
-    this.moveBackground()
+    // FIXME: Sementara matiin background, tggu fix createBackground
+    //this.moveBackground()
     this.moveRockets()
   }
   /**
