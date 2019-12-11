@@ -1,5 +1,5 @@
 import * as Phaser from 'phaser'
-import * as rocketImg from '../assets/rocket.png' // Importing image need to use *
+import * as rocketImg from '../assets/Rocket.png' // Importing image need to use *
 import * as _ from 'lodash'
 import Brain from './Brain'
 import {NUM_OF_ASTEROIDS} from '../config'
@@ -38,8 +38,8 @@ class Rocket {
   constructor(Scene: Phaser.Scene, position: { x: number, y: number }, speed: number, id?: string | number) {
     this.scene = Scene
     this.gameObj = Scene.physics.add.sprite(position.x, position.y, Rocket.textureKey)
-    this.gameObj.scale = 0.2
-    this.gameObj.angle = 90
+    this.gameObj.scale = 0.8
+    //this.gameObj.angle = 90
     this.gameObj.setBounce(0, 1);
     this.gameObj.setCollideWorldBounds(true);
     this.speed = speed;
@@ -60,20 +60,21 @@ class Rocket {
       brainInputs.push(asteroid.x)
       brainInputs.push(asteroid.y)
     })
-    this.brain.predict(brainInputs)
+    const brainOutputs = this.brain.predict(brainInputs)
+    this.makeDecision(brainOutputs)
+    this.move()
   }
   makeDecision (brainOutput: brainOutput) {
-    const up = [1,0]
-    const down = [0,1]
-    const stay = [0,0]
-    if (_.isEqual(brainOutput, up)) {
-      this.currentDecision = 'UP'
-    }
-    if (_.isEqual(brainOutput, down)) {
-      this.currentDecision = 'DOWN'
-    }
-    if (_.isEqual(brainOutput, stay)) {
+    // brainOutput[0] == probability of moving up
+    // brainOutput[1] == probability of moving down
+    const diffThreshold = 0.1
+    const outputDiff = Math.abs(brainOutput[0] - brainOutput[1])
+    if (outputDiff <= diffThreshold) {
       this.currentDecision = 'STAY'
+    } else if (brainOutput[0] > brainOutput[1]) {
+      this.currentDecision = 'UP'
+    } else if (brainOutput[1] > brainOutput[0]) {
+      this.currentDecision = 'DOWN'
     }
   }
   move () {

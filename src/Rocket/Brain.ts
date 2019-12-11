@@ -31,7 +31,6 @@ class Brain {
     const xs = tf.tensor2d([input])
     const ys = this.model.predict(xs) as tf.Tensor
     const outputs = ys.dataSync()
-    console.log(outputs)
     return outputs
   }
 }
