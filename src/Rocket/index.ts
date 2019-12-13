@@ -40,7 +40,7 @@ class Rocket extends Phaser.Physics.Arcade.Sprite {
     this.scale = 0.8
     Scene.add.existing(this)
     Scene.physics.add.existing(this)
-    this.setCollideWorldBounds(true, 0, 0.1)
+    this.setCollideWorldBounds(true)
     this.speed = speed;
     this.brain = new Brain(inputNum, hiddenNum, outputNum)
     if (id) this.id = id
