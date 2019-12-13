@@ -15,10 +15,10 @@ const outputNum = 2
 
 type coordinates = { x: number, y: number }
 type brainOutput = [number, number]
-class Rocket {
+
+class Rocket extends Phaser.Physics.Arcade.Sprite {
   static textureKey = 'ROCKET'
   static image = rocketImg
-  gameObj: Phaser.Physics.Arcade.Sprite
   speed: number
   scene: Phaser.Scene
   id: number | string
@@ -36,12 +36,11 @@ class Rocket {
   brain: any // FIXME: this is the type of neural network
   currentDecision: 'UP' | 'DOWN' | 'STAY'
   constructor(Scene: Phaser.Scene, position: { x: number, y: number }, speed: number, id?: string | number) {
-    this.scene = Scene
-    this.gameObj = Scene.physics.add.sprite(position.x, position.y, Rocket.textureKey)
-    this.gameObj.scale = 0.8
-    //this.gameObj.angle = 90
-    this.gameObj.setBounce(0, 1);
-    this.gameObj.setCollideWorldBounds(true);
+    super(Scene, position.x, position.y, Rocket.textureKey)
+    this.scale = 0.8
+    Scene.add.existing(this)
+    Scene.physics.add.existing(this)
+    this.setCollideWorldBounds(true, 0, 0.1)
     this.speed = speed;
     this.brain = new Brain(inputNum, hiddenNum, outputNum)
     if (id) this.id = id
@@ -54,7 +53,7 @@ class Rocket {
   }
   detectAsteroids(asteroids: Array<Phaser.GameObjects.Image>) {
     const brainInputs = []
-    const currPos = { x: this.gameObj.x, y: this.gameObj.y }
+    const currPos = { x: this.x, y: this.y }
     brainInputs.push(currPos.y)
     asteroids.forEach(asteroid => {
       brainInputs.push(asteroid.x)
@@ -86,10 +85,10 @@ class Rocket {
     }
   }
   moveUp () {
-    this.gameObj.setVelocityY(-1 * this.speed)
+    this.setVelocityY(-1 * this.speed)
   }
   moveDown () {
-    this.gameObj.setVelocityY(this.speed)
+    this.setVelocityY(this.speed)
   }
 }
 

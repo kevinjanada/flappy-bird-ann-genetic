@@ -23,6 +23,7 @@ class PlayScene extends Phaser.Scene {
     this.createRockets(NUM_OF_ROCKETS)
     this.createAsteroids(NUM_OF_ASTEROIDS)
     this.handleCollision()
+    this.physics.world.setBoundsCollision(false, false, true, true)
   }
   update () {
     this.ASTEROIDS.forEach(asteroid => this.moveAsteroid(asteroid, this.ASTEROIDS_SPEED))
@@ -49,7 +50,7 @@ class PlayScene extends Phaser.Scene {
     const rocketSpeed = 500
     for (let i = 0; i < numOfRockets; i++) {
       let randomY = Phaser.Math.Between(0, SCENE_HEIGHT - 20)
-      const rocket = new Rocket(this, {x: 300, y: randomY}, rocketSpeed, `Rocket-${i}`)
+      const rocket = new Rocket(this, {x: 300, y: randomY}, rocketSpeed)
       this.ROCKETS.push(rocket)
     }
   }
@@ -70,14 +71,19 @@ class PlayScene extends Phaser.Scene {
   handleCollision () {
     function onCollision (rocket: Phaser.GameObjects.Sprite, asteroid: Phaser.GameObjects.Sprite) {
       rocket.destroy()
+      console.log('DESTROYED', rocket)
     }
-    this.physics.add.collider(this.ROCKETS.map(r => r.gameObj), this.ASTEROIDS, onCollision)
+    this.physics.add.collider(this.ROCKETS.map(r => r), this.ASTEROIDS, onCollision)
   }
   moveBackground () {
     this.BACKGROUND.tilePositionX += 0.5
   }
   moveRockets () {
-    this.ROCKETS.forEach(r => r.detectAsteroids(this.ASTEROIDS))
+    this.ROCKETS.forEach(r => {
+      if (r.active) {
+        r.detectAsteroids(this.ASTEROIDS)
+      }
+    })
   }
   /* 
    * Moves asteroid from right to left with random y position
