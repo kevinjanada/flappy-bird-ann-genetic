@@ -1,5 +1,6 @@
 import * as Phaser from 'phaser'
 import Rocket from '../Rocket'
+import Brain from '../Rocket/Brain'
 import * as asteroidImg from '../assets/Asteroid.png'
 import * as backgroundImg from '../assets/Space.png'
 import {NUM_OF_ROCKETS, NUM_OF_ASTEROIDS, SCENE_WIDTH, SCENE_HEIGHT} from '../config'
@@ -8,7 +9,7 @@ import { connect } from 'http2'
 class PlayScene extends Phaser.Scene {
   BACKGROUND: Phaser.GameObjects.TileSprite
   ASTEROIDS: Array<Phaser.GameObjects.Sprite> = []
-  ASTEROIDS_SPEED: number = 6
+  ASTEROIDS_SPEED: number = 10
   ROCKETS: Array<Rocket> = []
   ROCKET_COUNT: number = 0
   constructor() {
@@ -31,7 +32,10 @@ class PlayScene extends Phaser.Scene {
     this.moveBackground()
     this.moveRockets()
     if(this.ROCKET_COUNT === 0) {
-      this.createRockets(NUM_OF_ROCKETS)
+      this.createNextGenerationRockets()
+      // console.log(this.ROCKET_COUNT)
+      // console.log(this.ROCKETS)
+      // this.scene.stop()
     }
   }
   /**
@@ -47,15 +51,17 @@ class PlayScene extends Phaser.Scene {
     );
   }
   /**
-   * Create a rocket
+   * GA - Step 1 - INITIALIZE
+   * Create rockets.
+   * These rockets have their neural networks weights randomized
    */
   createRockets (numOfRockets: number) {
-    const rocketSpeed = 500
+    
     for (let i = 0; i < numOfRockets; i++) {
-      let randomY = Phaser.Math.Between(0, SCENE_HEIGHT - 20)
-      const rocket = new Rocket(this, {x: 300, y: randomY}, rocketSpeed, i)
+      
+      const rocket = new Rocket(this, i)
       this.handleCollision(rocket)
-      this.ROCKETS.push(rocket)
+      this.ROCKETS[i] = rocket
       this.ROCKET_COUNT++
     }
   }
@@ -88,10 +94,16 @@ class PlayScene extends Phaser.Scene {
     this.BACKGROUND.tilePositionX += 0.5
   }
 
+  /**
+   * Move Rockets,
+   * detect asteroids, 
+   * increment score if still alive
+   */
   moveRockets () {
     this.ROCKETS.forEach(r => {
       if (r.active) {
-        r.detectAsteroids(this.ASTEROIDS)
+        r.score++
+        r.detectAsteroidsAndMove(this.ASTEROIDS)
       }
     })
   }
@@ -112,6 +124,57 @@ class PlayScene extends Phaser.Scene {
         asteroid.y = Phaser.Math.Between(0, SCENE_HEIGHT)
       }
     })
+  }
+
+  /**
+   * Get the highest scoring rockets
+   * @param numOfRockets how many rockets do you want
+   */
+  // getFittestRockets(numOfRockets: number): Array<Rocket> {
+  //   const rockets = this.ROCKETS.map(r => r).sort((a, b) => a.fitness - b.fitness)
+  //   let highestScoringRockets = []
+  //   for (let i = 0; i < numOfRockets; i++) {
+  //     highestScoringRockets[i] = rockets[i]
+  //   }
+  //   return highestScoringRockets
+  // }
+
+  /**
+   * Create a new set of rockets with improved brains
+   */
+  createNextGenerationRockets() {
+    const newRockets = []
+    for (let i = 0; i < NUM_OF_ROCKETS; i++) {
+      newRockets[i] = this.pickFitRocket(i)
+    }
+    this.ROCKETS = newRockets
+    this.ROCKET_COUNT = newRockets.length
+  }
+
+  /**
+   * GA - Step 2 - SELECTION
+   * Evaluate the normalized fitness of each element of population
+   */
+  pickFitRocket(id: number) {
+    let index = 0;
+    let r = Math.random();
+    while (r > 0) {
+      r = r - this.ROCKETS[index].fitness;
+      index++;
+    }
+    index--;
+    let rocket = this.ROCKETS[index];
+    let child = new Rocket(this, id, rocket.brain);
+    // TODO:
+    child.brain.mutate();
+    this.handleCollision(child)
+    return child;
+  }
+
+  calculateRocketFitness() {
+    let totalFitness = 0
+    this.ROCKETS.forEach(r => totalFitness += r.score)
+    this.ROCKETS.forEach(r => r.fitness = Math.pow(r.score / totalFitness, 2))
   }
 }
 

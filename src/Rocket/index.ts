@@ -2,7 +2,7 @@ import * as Phaser from 'phaser'
 import * as rocketImg from '../assets/Rocket.png' // Importing image need to use *
 import * as _ from 'lodash'
 import Brain from './Brain'
-import {NUM_OF_ASTEROIDS} from '../config'
+import {NUM_OF_ASTEROIDS, SCENE_HEIGHT} from '../config'
 
 /**
 * @inputNum
@@ -13,8 +13,10 @@ const inputNum = 1 + (NUM_OF_ASTEROIDS * 2)
 const hiddenNum = 20
 const outputNum = 2
 
+
+
 type coordinates = { x: number, y: number }
-type brainOutput = [number, number]
+type brainOutput = Float32Array | Int32Array | Uint8Array
 
 class Rocket extends Phaser.Physics.Arcade.Sprite {
   static textureKey = 'ROCKET'
@@ -22,6 +24,8 @@ class Rocket extends Phaser.Physics.Arcade.Sprite {
   speed: number
   scene: Phaser.Scene
   id: number | string
+  score: number
+  fitness: number
   /**
    * @brain - {Neural Network}
    * @inputs
@@ -31,19 +35,27 @@ class Rocket extends Phaser.Physics.Arcade.Sprite {
    * - ??
    * @output
    * - go up / go down / stay still (2 nodes)
-   *   e.g [1,0] = go up, [0,1] = go down, [0,0] = stay still
+   *   e.g [1,0] = go up, [0,1] = go down, [0.5,0.5] = stay still
    */
-  brain: any // FIXME: this is the type of neural network
+  brain: Brain
   currentDecision: 'UP' | 'DOWN' | 'STAY'
-  constructor(Scene: Phaser.Scene, position: { x: number, y: number }, speed: number, id?: string | number) {
-    super(Scene, position.x, position.y, Rocket.textureKey)
+  constructor(Scene: Phaser.Scene, id?: string | number, brain?: Brain, position?: { x: number, y: number }, speed?: number) {
+    let y = position ? position.y : Phaser.Math.Between(0, SCENE_HEIGHT - 20)
+    let x = position ? position.x : 300
+    super(Scene, x, y, Rocket.textureKey)
+
     this.scale = 0.8
     Scene.add.existing(this)
     Scene.physics.add.existing(this)
     this.setCollideWorldBounds(true)
-    this.speed = speed;
-    this.brain = new Brain(inputNum, hiddenNum, outputNum)
+    this.speed = speed || 700;
+    if (brain) {
+      this.brain = brain
+    } else {
+      this.brain = new Brain(inputNum, hiddenNum, outputNum)
+    }
     if (id) this.id = id
+    this.score = 0
   }
   calculateDistance(pos1: coordinates, pos2: coordinates): number {
     const horizontal = Math.abs(pos2.x - pos1.x)
@@ -51,7 +63,7 @@ class Rocket extends Phaser.Physics.Arcade.Sprite {
     const distance = Math.sqrt(Math.pow(horizontal, 2) + Math.pow(vertical, 2))
     return distance
   }
-  detectAsteroids(asteroids: Array<Phaser.GameObjects.Image>) {
+  detectAsteroidsAndMove(asteroids: Array<Phaser.GameObjects.Image>) {
     const brainInputs = []
     const currPos = { x: this.x, y: this.y }
     brainInputs.push(currPos.y)
