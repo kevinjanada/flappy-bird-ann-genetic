@@ -1,19 +1,26 @@
 import * as Phaser from 'phaser'
+import * as tf from '@tensorflow/tfjs'
 import PlayScene from './scenes/PlayScene'
+
+
+const BACKGROUND_HEIGHT = 800
+const BACKGROUND_WIDTH = 450
 
 let game
 
 function main() {
-  const screenWidth = window.innerWidth - 20;
-  const screenHeight = window.innerHeight - 20;
+  // Tensorflow setup
+  tf.setBackend('cpu')
+
+  // Game Setup
   var config = {
     type: Phaser.AUTO,
-    width: screenWidth,
-    height: screenHeight,
+    width: BACKGROUND_HEIGHT,
+    height: BACKGROUND_WIDTH,
     physics: {
       default: 'arcade',
       arcade: {
-        gravity: { y: 0 }
+        gravity: { y: 0 },
       }
     },
     scene: [PlayScene]
