@@ -4,7 +4,6 @@ import Brain from '../Rocket/Brain'
 import * as asteroidImg from '../assets/Asteroid.png'
 import * as backgroundImg from '../assets/Space.png'
 import {NUM_OF_ROCKETS, NUM_OF_ASTEROIDS, SCENE_WIDTH, SCENE_HEIGHT} from '../config'
-import { connect } from 'http2'
 
 class PlayScene extends Phaser.Scene {
   BACKGROUND: Phaser.GameObjects.TileSprite
@@ -147,6 +146,8 @@ class PlayScene extends Phaser.Scene {
     for (let i = 0; i < NUM_OF_ROCKETS; i++) {
       newRockets[i] = this.pickFitRocket(i)
     }
+    Brain.crossOver(newRockets[0].brain, newRockets[1].brain) // FIXME: INI ngetes aja
+    this.scene.stop();
     this.ROCKETS = newRockets
     this.ROCKET_COUNT = newRockets.length
   }

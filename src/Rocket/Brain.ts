@@ -1,4 +1,11 @@
 import * as tf from '@tensorflow/tfjs'
+import {NUM_OF_ASTEROIDS} from '../config'
+
+export const defaultConfig = {
+inputNum: 1 + (NUM_OF_ASTEROIDS * 2),
+hiddenNum: 20,
+outputNum: 2,
+}
 
 class Brain {
   model: tf.Sequential
@@ -54,9 +61,48 @@ class Brain {
   /**
    * Crossover between brains, return a new Brain
    */
-  static crossOver(brains: Array<Brain>): Brain {
-    console.log(brains[0].model.getWeights())
-    return brains[0] // FIXME:
+  static crossOver(brainOne: Brain, brainTwo: Brain): Brain {
+    const brainOneWeights = brainOne.model.getWeights()
+    const brainTwoWeights = brainTwo.model.getWeights()
+    const b1_inputToHiddenWeights = brainOneWeights[0]
+    const b1_hiddenBias = brainOneWeights[1]
+    const b1_hiddenToOutputWeights = brainOneWeights[2]
+    const b1_outputBias = brainOneWeights[3]
+
+    const b2_inputToHiddenWeights = brainTwoWeights[0]
+    const b2_hiddenBias = brainTwoWeights[1]
+    const b2_hiddenToOutputWeights = brainTwoWeights[2]
+    const b2_outputBias = brainTwoWeights[3]
+
+    const new_inputToHiddenWeights = tf.concat([
+      b1_inputToHiddenWeights.slice([0,0], [11,20]),
+      b2_inputToHiddenWeights.slice([10, 0], [10, 20])
+    ])
+
+    const new_hiddenBias = tf.concat([
+      b1_hiddenBias.slice([0], [10]),
+      b2_hiddenBias.slice([10], [10])
+    ])
+
+    const new_hiddenToOutputWeights = tf.concat([
+      b1_hiddenToOutputWeights.slice([0,0], [10, 2]),
+      b2_hiddenToOutputWeights.slice([10,0], [10, 2])
+    ])
+
+    const new_outputBias = tf.concat([
+      b1_outputBias.slice([0], [1]),
+      b2_outputBias.slice([1], [1])
+    ])
+
+    console.log(new_inputToHiddenWeights)
+    console.log(new_hiddenBias)
+    console.log(new_hiddenToOutputWeights)
+    console.log(new_outputBias)
+    
+    const { inputNum, hiddenNum, outputNum } = defaultConfig
+    //const childBrain = new Brain(inputNum, hiddenNum, outputNum)
+    //return childBrain
+    return new Brain(inputNum, hiddenNum, outputNum)
   }
 }
 
