@@ -8,7 +8,7 @@ import {NUM_OF_ROCKETS, NUM_OF_ASTEROIDS, SCENE_WIDTH, SCENE_HEIGHT} from '../co
 class PlayScene extends Phaser.Scene {
   BACKGROUND: Phaser.GameObjects.TileSprite
   ASTEROIDS: Array<Phaser.GameObjects.Sprite> = []
-  ASTEROIDS_SPEED: number = 10
+  ASTEROIDS_SPEED: number = 50
   ROCKETS: Array<Rocket> = []
   ROCKET_COUNT: number = 0
   constructor() {
@@ -142,12 +142,23 @@ class PlayScene extends Phaser.Scene {
    * Create a new set of rockets with improved brains
    */
   createNextGenerationRockets() {
-    const newRockets = []
+    const fitRockets = []
     for (let i = 0; i < NUM_OF_ROCKETS; i++) {
-      newRockets[i] = this.pickFitRocket(i)
+      fitRockets[i] = this.pickFitRocket()
     }
-    Brain.crossOver(newRockets[0].brain, newRockets[1].brain) // FIXME: INI ngetes aja
-    this.scene.stop();
+    const newRockets = []
+    let childRocket : Rocket = null;
+    for (let j = 1; j < fitRockets.length; j++) {
+      if (j % 2 !== 0) {
+        const newBrain = Brain.crossOver(fitRockets[j].brain, fitRockets[j-1].brain)
+        childRocket = new Rocket(this, j, newBrain)
+      } else {
+        childRocket = new Rocket(this, j)
+      }
+      this.handleCollision(childRocket)
+      newRockets.push(childRocket)
+    }
+    //this.scene.stop();
     this.ROCKETS = newRockets
     this.ROCKET_COUNT = newRockets.length
   }
@@ -156,7 +167,7 @@ class PlayScene extends Phaser.Scene {
    * GA - Step 2 - SELECTION
    * Evaluate the normalized fitness of each element of population
    */
-  pickFitRocket(id: number) {
+  pickFitRocket() {
     let index = 0;
     let r = Math.random();
     while (r > 0) {
@@ -165,11 +176,7 @@ class PlayScene extends Phaser.Scene {
     }
     index--;
     let rocket = this.ROCKETS[index];
-    let child = new Rocket(this, id, rocket.brain);
-    // TODO:
-    child.brain.mutate();
-    this.handleCollision(child)
-    return child;
+    return rocket
   }
 
   calculateRocketFitness() {

@@ -55,7 +55,7 @@ class Brain {
   }
 
   mutate() {
-    console.log('TODO: Need to implement brain mutate function')
+    //console.log('TODO: Need to implement brain mutate function')
   }
 
   /**
@@ -94,15 +94,18 @@ class Brain {
       b2_outputBias.slice([1], [1])
     ])
 
-    console.log(new_inputToHiddenWeights)
-    console.log(new_hiddenBias)
-    console.log(new_hiddenToOutputWeights)
-    console.log(new_outputBias)
-    
+    const newWeights = [
+      new_inputToHiddenWeights,
+      new_hiddenBias,
+      new_hiddenToOutputWeights,
+      new_outputBias,
+    ]
+
     const { inputNum, hiddenNum, outputNum } = defaultConfig
-    //const childBrain = new Brain(inputNum, hiddenNum, outputNum)
-    //return childBrain
-    return new Brain(inputNum, hiddenNum, outputNum)
+    
+    const newBrain =  new Brain(inputNum, hiddenNum, outputNum)
+    newBrain.model.setWeights(newWeights)
+    return newBrain
   }
 }
 
