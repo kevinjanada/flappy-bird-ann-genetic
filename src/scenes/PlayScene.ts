@@ -8,7 +8,7 @@ import {NUM_OF_ROCKETS, NUM_OF_ASTEROIDS, SCENE_WIDTH, SCENE_HEIGHT} from '../co
 class PlayScene extends Phaser.Scene {
   BACKGROUND: Phaser.GameObjects.TileSprite
   ASTEROIDS: Array<Phaser.GameObjects.Sprite> = []
-  ASTEROIDS_SPEED: number = 50
+  ASTEROIDS_SPEED: number = 10
   ROCKETS: Array<Rocket> = []
   ROCKET_COUNT: number = 0
   constructor() {
@@ -68,14 +68,34 @@ class PlayScene extends Phaser.Scene {
    * Create Astoroids
    * @param numOfAsteroids {number}
    */
+  // createAsteroids (numOfAsteroids: number) {
+  //   for (let i = 0; i < numOfAsteroids; i++) {
+  //     const asteroid = this.physics.add.sprite(
+  //       Phaser.Math.Between(SCENE_HEIGHT + 50, SCENE_WIDTH + 1500),
+  //       Phaser.Math.Between(0, SCENE_HEIGHT),
+  //       'asteroid'
+  //     )
+  //     asteroid.body.immovable = true
+  //     this.ASTEROIDS.push(asteroid)
+  //   }
+  // }
   createAsteroids (numOfAsteroids: number) {
+    const ySectionHeight = SCENE_HEIGHT / 3
+    const bottomSectionY = ySectionHeight / 2
+    const midSectionY = (ySectionHeight / 2) + ySectionHeight
+    const topSectionY = (ySectionHeight / 2) + (2 * ySectionHeight)
+    const positions = [bottomSectionY, midSectionY, topSectionY]
+    console.log(positions)
     for (let i = 0; i < numOfAsteroids; i++) {
       const asteroid = this.physics.add.sprite(
-        Phaser.Math.Between(SCENE_HEIGHT + 50, SCENE_WIDTH + 1500),
-        Phaser.Math.Between(0, SCENE_HEIGHT),
-        'asteroid'
+        Phaser.Math.Between(SCENE_HEIGHT + 50, SCENE_WIDTH + 1500), // x
+        positions[Phaser.Math.Between(0, 2)], // y
+        'asteroid' // texture key
       )
       asteroid.body.immovable = true
+      const scale = ySectionHeight / asteroid.displayHeight
+      asteroid.displayHeight = asteroid.displayHeight * scale
+      asteroid.displayWidth = asteroid.displayWidth * scale
       this.ASTEROIDS.push(asteroid)
     }
   }
@@ -115,12 +135,17 @@ class PlayScene extends Phaser.Scene {
    * @param speed {number}
    * */
   moveAsteroids (speed: number) {
+    const ySectionHeight = SCENE_HEIGHT / 3
+    const bottomSectionY = ySectionHeight / 2
+    const midSectionY = (ySectionHeight / 2) + ySectionHeight
+    const topSectionY = (ySectionHeight / 2) + (2 * ySectionHeight)
+    const positions = [bottomSectionY, midSectionY, topSectionY]
     this.ASTEROIDS.forEach(asteroid => {
       asteroid.x -= speed // move left
       if (asteroid.x < -50) {
         // Reset Position
         asteroid.x = SCENE_WIDTH + 20
-        asteroid.y = Phaser.Math.Between(0, SCENE_HEIGHT)
+        asteroid.y = positions[Phaser.Math.Between(0, 2)]
       }
     })
   }

@@ -74,9 +74,11 @@ class Brain {
     const b2_hiddenToOutputWeights = brainTwoWeights[2]
     const b2_outputBias = brainTwoWeights[3]
 
+    console.log(brainOneWeights)
+
     const new_inputToHiddenWeights = tf.concat([
-      b1_inputToHiddenWeights.slice([0,0], [11,20]),
-      b2_inputToHiddenWeights.slice([10, 0], [10, 20])
+      b1_inputToHiddenWeights.slice([0,0], [4,20]),
+      b2_inputToHiddenWeights.slice([3, 0], [3, 20])
     ])
 
     const new_hiddenBias = tf.concat([
